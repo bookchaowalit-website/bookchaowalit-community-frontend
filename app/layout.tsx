@@ -27,6 +27,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* impeccable:contract
+          THESIS: A community directory should make the next room easy to locate, not pretend to be a social network.
+          OWN-WORLD: Neighborhood field notes with a signal map, channel index, and one focused room view.
+          STORY: Search the index, open a room, and add a local resource when one is missing.
+          FIRST VIEWPORT: The room-finding thesis and orbital directory motif appear before the index.
+          FORM: One directory split into index and active room, with an inline add form instead of repeated cards.
+          FINISH: Status dots have text labels, local-only limits are visible, and mobile preserves the room path.
+          CONCEPT-SEED: d150cb30 / assigned candidate 3 / direction
+        */}
         <Analytics />
         <SpeedInsights />
         {children}
