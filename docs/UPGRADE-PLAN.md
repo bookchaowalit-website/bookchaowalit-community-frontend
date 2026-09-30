@@ -40,3 +40,4 @@ storage, tested model, clean lint, and CI.
   - Stored/imported `createdAt` of `1e20` or negative values passed the
     finite check and rendered "Added Invalid Date"; now clamped to Date range.
   - Clipping over-long stored titles/bodies could cut an emoji in half.
+- Security deps: `next` 16.1.6 -> 16.3.8 (and `eslint-config-next`) clears critical GHSA-2xp9-vwfh-vxw4 (Image Optimization RCE) plus bundled postcss/sharp highs; lockfile regenerated with same-major `npm audit fix`. `npm audit --omit=dev`: C1/H3/M1/L0 [nanoid:h,next:c,postcss:h,sharp:h] -> C0/H0/M0/L0.
