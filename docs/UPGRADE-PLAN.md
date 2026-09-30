@@ -11,7 +11,6 @@ storage, tested model, clean lint, and CI.
 - (none open)
 
 ### P1
-- Export/import the directory as JSON so entries survive a browser reset.
 - Confirm canonical domain; set `NEXT_PUBLIC_SITE_URL`.
 - Split the single-line JSX in `app/page.tsx` into small components.
 
@@ -29,3 +28,7 @@ storage, tested model, clean lint, and CI.
   storage writes no longer throw when blocked.
 - Replaced stub `/api/mcp` with honest `describe_directory` / `validate_room`.
 - CI (lint, typecheck, test, build); metadata canonical; robots/sitemap.
+
+## Done in this pass (pass 2)
+- JSON backup: Export downloads the directory (`exportChannels`), Import merges a file (`importChannels`: accepts the export envelope or a bare array, validates like stored data incl. unsafe-link stripping, never overwrites existing ids) with a visible `role="status"` result. Tested in `tests/channels.test.ts`.
+- Checked cross-repo consistency: sitemap/robots already generated from `lib/site.ts` + `NEXT_PUBLIC_SITE_URL`; no stale static files.

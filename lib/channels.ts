@@ -105,3 +105,36 @@ export function filterChannels(channels: readonly Channel[], query: string): Cha
 export function setStatus(channels: readonly Channel[], id: string, status: Status): Channel[] {
   return channels.map((channel) => (channel.id === id ? { ...channel, status } : channel));
 }
+
+export const EXPORT_VERSION = 1;
+
+/** Serialise the directory for a JSON backup file. */
+export function exportChannels(channels: readonly Channel[]): string {
+  return JSON.stringify({ app: "community", version: EXPORT_VERSION, channels }, null, 2) + "\n";
+}
+
+export type ImportResult = { channels: Channel[]; added: number; skipped: number } | { error: string };
+
+/**
+ * Merge a JSON backup into the current directory. Accepts the export envelope
+ * or a bare array; entries are validated like stored data, and ids already in
+ * the directory are kept as they are (counted as skipped).
+ */
+export function importChannels(current: readonly Channel[], raw: string): ImportResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { error: "That file is not valid JSON." };
+  }
+  const list = Array.isArray(parsed)
+    ? parsed
+    : typeof parsed === "object" && parsed !== null && Array.isArray((parsed as { channels?: unknown }).channels)
+      ? (parsed as { channels: unknown[] }).channels
+      : null;
+  if (!list) return { error: "Expected a community export (an object with a channels list)." };
+  const incoming = parseStoredChannels(JSON.stringify(list)) ?? [];
+  const known = new Set(current.map((channel) => channel.id));
+  const fresh = incoming.filter((channel) => !known.has(channel.id));
+  return { channels: [...current, ...fresh], added: fresh.length, skipped: list.length - fresh.length };
+}

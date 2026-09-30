@@ -49,3 +49,9 @@ a { color: inherit; text-decoration: none; }
 .community-status-select select option { color: #10182a; }
 .community-shell a:focus-visible, .community-shell button:focus-visible, .community-shell input:focus-visible, .community-shell select:focus-visible, .community-shell textarea:focus-visible { outline: 2px solid #f19b63; outline-offset: 3px; }
 @media (max-width: 900px) { .community-add-form { grid-template-columns: 1fr 1fr; } }
+.community-backup { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 18px; font: 11px 'DM Mono', monospace; }
+.community-backup button, .community-backup label { border: 1px solid currentColor; background: transparent; color: #f19b63; padding: 6px 10px; font: inherit; cursor: pointer; }
+.community-backup label { position: relative; }
+.community-backup input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.community-backup label:focus-within, .community-backup button:focus-visible { outline: 2px solid #f19b63; outline-offset: 2px; }
+.community-backup p { flex-basis: 100%; min-height: 1.2em; margin: 0; opacity: .8; }

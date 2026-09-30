@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { MAX_TITLE, createChannel, filterChannels, parseStoredChannels, sanitizeUrl, setStatus } from "../lib/channels.ts";
+import { MAX_TITLE, createChannel, exportChannels, filterChannels, importChannels, parseStoredChannels, sanitizeUrl, setStatus } from "../lib/channels.ts";
 
 describe("sanitizeUrl", () => {
   it("accepts http(s) and rejects script or relative links", () => {
@@ -69,5 +69,37 @@ describe("filter and update", () => {
     const next = setStatus(channels, "b", "Done");
     assert.equal(next[1].status, "Done");
     assert.equal(channels[1].status, "Draft");
+  });
+});
+
+describe("export / import", () => {
+  const base = [{ id: "a", title: "Discord", body: "", status: "Active" as const, createdAt: 1 }];
+
+  it("round-trips an export without duplicating existing rooms", () => {
+    const result = importChannels(base, exportChannels(base));
+    assert.ok(!("error" in result));
+    assert.deepEqual(result.channels, base);
+    assert.equal(result.added, 0);
+    assert.equal(result.skipped, 1);
+  });
+
+  it("adds new valid rooms, drops unsafe links and malformed entries", () => {
+    const raw = JSON.stringify([
+      { id: "b", title: "Forum", body: "Q&A", status: "Done", createdAt: 2, url: "javascript:alert(1)" },
+      { id: "c", title: "" },
+      "junk",
+    ]);
+    const result = importChannels(base, raw);
+    assert.ok(!("error" in result));
+    assert.equal(result.added, 1);
+    assert.equal(result.skipped, 2);
+    const forum = result.channels.find((channel) => channel.id === "b");
+    assert.equal(forum?.url, undefined);
+    assert.equal(forum?.status, "Done");
+  });
+
+  it("explains invalid files", () => {
+    assert.deepEqual(importChannels(base, "{nope"), { error: "That file is not valid JSON." });
+    assert.ok("error" in importChannels(base, JSON.stringify({ works: [] })));
   });
 });
