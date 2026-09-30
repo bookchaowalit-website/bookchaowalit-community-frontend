@@ -103,3 +103,27 @@ describe("export / import", () => {
     assert.ok("error" in importChannels(base, JSON.stringify({ works: [] })));
   });
 });
+
+describe("edge cases", () => {
+  it("imports a backup saved with a UTF-8 BOM", () => {
+    const raw = `﻿${exportChannels([{ id: "c1", title: "Room", body: "", status: "Active", createdAt: 1 }])}`;
+    const result = importChannels([], raw);
+    assert.ok("channels" in result, "BOM-prefixed export should import");
+    assert.equal(result.added, 1);
+  });
+
+  it("drops timestamps a Date cannot render instead of showing Invalid Date", () => {
+    const raw = JSON.stringify([
+      { id: "a", title: "A", createdAt: 1e20 },
+      { id: "b", title: "B", createdAt: -5 },
+      { id: "c", title: "C", createdAt: 1710000000000 },
+    ]);
+    assert.deepEqual(parseStoredChannels(raw)?.map((channel) => channel.createdAt), [0, 0, 1710000000000]);
+  });
+
+  it("never leaves half an emoji when clipping an over-long stored title", () => {
+    const title = `${"x".repeat(MAX_TITLE - 1)}😀`;
+    const [channel] = parseStoredChannels(JSON.stringify([{ id: "a", title }])) ?? [];
+    assert.equal(channel.title, "x".repeat(MAX_TITLE - 1));
+  });
+});

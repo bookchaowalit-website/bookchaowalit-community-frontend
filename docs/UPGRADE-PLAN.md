@@ -32,3 +32,11 @@ storage, tested model, clean lint, and CI.
 ## Done in this pass (pass 2)
 - JSON backup: Export downloads the directory (`exportChannels`), Import merges a file (`importChannels`: accepts the export envelope or a bare array, validates like stored data incl. unsafe-link stripping, never overwrites existing ids) with a visible `role="status"` result. Tested in `tests/channels.test.ts`.
 - Checked cross-repo consistency: sitemap/robots already generated from `lib/site.ts` + `NEXT_PUBLIC_SITE_URL`; no stale static files.
+
+## Done in this pass (pass 3)
+- Edge-case pass on `lib/channels.ts` (regression tests in `tests/channels.test.ts`):
+  - JSON import rejected backups saved with a UTF-8 BOM (Windows Notepad) as
+    "not valid JSON"; the BOM is now stripped before parsing.
+  - Stored/imported `createdAt` of `1e20` or negative values passed the
+    finite check and rendered "Added Invalid Date"; now clamped to Date range.
+  - Clipping over-long stored titles/bodies could cut an emoji in half.

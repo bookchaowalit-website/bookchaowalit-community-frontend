@@ -33,6 +33,26 @@ export function sanitizeUrl(raw: string): string | null {
   }
 }
 
+/** Largest timestamp a JS Date can represent (Date(1e20) is "Invalid Date"). */
+const MAX_DATE_MS = 8.64e15;
+
+/** A stored timestamp the page can render, or 0 ("unknown"). */
+export function safeTimestamp(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= MAX_DATE_MS ? value : 0;
+}
+
+/** Cut to `max` UTF-16 units without leaving half of a surrogate pair (emoji) behind. */
+export function clipText(value: string, max: number): string {
+  if (value.length <= max) return value;
+  const end = /[\uD800-\uDBFF]/.test(value[max - 1]) ? max - 1 : max;
+  return value.slice(0, end);
+}
+
+/** JSON.parse that tolerates the UTF-8 BOM some editors (Windows Notepad) prepend. */
+function parseJson(raw: string): unknown {
+  return JSON.parse(raw.replace(/^\uFEFF/, ""));
+}
+
 function isStatus(value: unknown): value is Status {
   return typeof value === "string" && (STATUSES as readonly string[]).includes(value);
 }
@@ -42,7 +62,7 @@ export function parseStoredChannels(raw: string | null): Channel[] | null {
   if (raw === null) return null;
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    parsed = parseJson(raw);
   } catch {
     return null;
   }
@@ -56,10 +76,10 @@ export function parseStoredChannels(raw: string | null): Channel[] | null {
     if (typeof title !== "string" || !title.trim()) continue;
     const channel: Channel = {
       id,
-      title: title.slice(0, MAX_TITLE),
-      body: typeof body === "string" ? body.slice(0, MAX_BODY) : "",
+      title: clipText(title, MAX_TITLE),
+      body: typeof body === "string" ? clipText(body, MAX_BODY) : "",
       status: isStatus(status) ? status : "Draft",
-      createdAt: typeof createdAt === "number" && Number.isFinite(createdAt) ? createdAt : 0,
+      createdAt: safeTimestamp(createdAt),
     };
     const safeUrl = typeof url === "string" ? sanitizeUrl(url) : null;
     if (safeUrl) channel.url = safeUrl;
@@ -123,7 +143,7 @@ export type ImportResult = { channels: Channel[]; added: number; skipped: number
 export function importChannels(current: readonly Channel[], raw: string): ImportResult {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    parsed = parseJson(raw);
   } catch {
     return { error: "That file is not valid JSON." };
   }
